@@ -1,0 +1,5 @@
+package heijunka
+
+func init() {
+
+}
