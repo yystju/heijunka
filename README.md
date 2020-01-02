@@ -17,5 +17,11 @@ Algorithm of Heijunka in golang...
 
 3. dependencies
 
+    ```
     go get github.com/BurntSushi/toml
+    
+    ```
 
+    ~~go get golang.org/x/crypto/ssh [x]~~
+    
+    ~~go get gopkg.in/src-d/go-git.v4 [x]~~
