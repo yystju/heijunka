@@ -7,7 +7,7 @@ Algorithm of Heijunka in golang...
 
     So if you wanna use it as a libray, you'd better change the structure. 
     
-    For now, I will develop it on [Theia IDE](https://theia-ide.org/) to see if it's OK to be uese in real business development.
+    For now, I will develop it on [Theia IDE](https://theia-ide.org/) to see if it's OK to be used in real business development.
 
 2. The code is assumed to be directly as $GOPATH. 
 
