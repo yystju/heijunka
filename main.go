@@ -39,4 +39,10 @@ func main() {
 	log.Println("[MAIN]")
 
 	log.Printf("config : %v\n", config)
+
+	orders := make(map[string]int)
+
+	h := heijunka.NewHeijunka(orders)
+
+	log.Println(h)
 }

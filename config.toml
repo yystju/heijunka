@@ -1,0 +1,11 @@
+[heijunka]
+    ID = "aabb"
+    Name = "TEST"
+
+[[solver]]
+    ID = "aabb"
+    Name = "TEST"
+
+[[solver]]
+    ID = "aabb"
+    Name = "TEST"

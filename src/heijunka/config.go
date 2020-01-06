@@ -2,18 +2,18 @@ package heijunka
 
 // Config is structure for toml
 type Config struct {
-	Heijunka Heijunka `toml:"heijunka"`
-	Solvers  []Solver `toml:"solver"`
+	Heijunka HeijunkaConfig `toml:"heijunka"`
+	Solvers  []SolverConfig `toml:"solver"`
 }
 
-// Heijunka section is the configurations for overall.
-type Heijunka struct {
+// HeijunkaConfig section is the configurations for overall.
+type HeijunkaConfig struct {
 	ID   string `toml:"id"`
-	Name int    `toml:"name"`
+	Name string    `toml:"name"`
 }
 
-// Solver section is the configurations for the specific solver.
-type Solver struct {
+// SolverConfig section is the configurations for the specific solver.
+type SolverConfig struct {
 	ID   string `toml:"id"`
 	Name string `toml:"name"`
 }
