@@ -151,27 +151,57 @@ func (h *Heijunka) Process() {
 		for _, r := range keys {
 			selected := rank[r]
 
+			var s string
+
 			if len(selected) > 1 {
-				s := selected[0]
-				min := i
+				min := len(h.Items)
+
+				m := make(map[string]int)
+
 				for _, o := range selected {
 					n := h.existed(o)
 
-					if n > min {
+					m[o] = n
+
+					if n < min {
 						min = n
-						s = o
 					}
 				}
 
-				log.Printf("selected : %v", s)
+				selected = make([]string, 0, len(m))
 
-				h.Items = append(h.Items, s)
+				for k,v := range m {
+					if min == v {
+						selected = append(selected, k)
+					}
+				}
+				
+				if len(selected) > 1 {
+					var last string
+
+					if len(h.Items) > 0 {
+						last = h.Items[len(h.Items) - 1]
+					} else {
+						last = ""
+					}
+
+					for _, o := range selected {
+						if o != last {
+							s = o
+							break
+						}
+					}
+				} else if len(selected) == 1 {
+					s = selected[0]
+				}
 			} else {
-				log.Printf("selected : %v", selected[0])
-
-				h.Items = append(h.Items, selected[0])
+				s = selected[0]
 			}
-			// showup[]
+
+			log.Printf("selected : %v", s)
+
+			h.Items = append(h.Items, s)
+
 			break
 		}
 	}
