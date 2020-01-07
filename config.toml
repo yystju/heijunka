@@ -1,11 +1,12 @@
 [heijunka]
-    ID = "aabb"
-    Name = "TEST"
+    id = "test"
+    name = "TEST"
+    verbose = false
+    
+[[solver]]
+    id = "A"
+    name = "Solver A"
 
 [[solver]]
-    ID = "aabb"
-    Name = "TEST"
-
-[[solver]]
-    ID = "aabb"
-    Name = "TEST"
+    id = "B"
+    name = "Solver B"

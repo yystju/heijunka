@@ -6,74 +6,24 @@ import (
 	"sort"
 )
 
-// type Item interface {
-// 	Type() string
-// 	Name() string
-// 	Gategory() *Category
-// }
-
-// type Category interface {
-// 	Name() string
-// // }
-
-// type Category struct {
-// 	name string
-// }
-
-// func (c *Category) Name() string {
-// 	return c.name;
-// }
-
-// func NewCategory(name string) *Category {
-// 	c := new(Category)
-
-// 	c.name = name
-
-// 	return c
-// }
-
-// type VC struct {
-// 	name string
-// 	count int
-// 	category *Category
-// 	// Item;
-// }
-
-// func (vc *VC) Type() string {
-// 	return "VC"
-// }
-
-// func (vc *VC) Name() string {
-// 	return vc.name
-// }
-
-// func (vc *VC) Gategory() *Category {
-// 	return vc.category
-// }
-
-// func NewVC(name string, category * Category) *VC {
-// 	vc := new(VC)
-
-// 	vc.name = name
-// 	vc.category = category
-
-// 	return vc
-// }
-
 // Plan is ...
 type Plan struct {
-	Orders map[string]int `json:"map"`
+	Orders map[string]int `json:"orders"`
+	Categories map[string][]string `json:"categories"`
 }
 
 // Heijunka is ...
 type Heijunka struct {
+	Config *Config `json:"config"`
 	Plan  Plan     `json:"plan"`
 	Items []string `json:"items"`
 }
 
 // NewHeijunka is ...
-func NewHeijunka(orders map[string]int) *Heijunka {
+func NewHeijunka(config *Config, orders map[string]int, categories map[string][]string) *Heijunka {
 	h := new(Heijunka)
+
+	h.Config = config
 
 	n := 0
 
@@ -87,6 +37,12 @@ func NewHeijunka(orders map[string]int) *Heijunka {
 
 	h.Items = make([]string, 0, n)
 
+	h.Plan.Categories = make(map[string][]string)
+
+	for k, v := range categories {
+		h.Plan.Categories[k] = v
+	}
+
 	return h
 }
 
@@ -94,23 +50,46 @@ func NewHeijunka(orders map[string]int) *Heijunka {
 func (h *Heijunka) Process() {
 	n := h.count()
 
-	// showup := make(map[string]float64)
 	proportion := make(map[string]float64)
 
-	for k, v := range h.Plan.Orders {
-		proportion[k] = float64(v) / float64(n)
+	for k, v := range h.Plan.Categories {
+		c := 0
+
+		for _, o := range v {
+			c += (h.Plan.Orders[o])
+		}
+
+		proportion[k] = float64(c) / float64(n)
+	}
+
+	if h.Config.Heijunka.Verbose {
+		log.Printf("proportion : %v", proportion)
 	}
 
 	for i := 0; i < n; i++ {
+		if h.Config.Heijunka.Verbose {
+			log.Printf("[ROUND %v]", i)
+		}
+
 		ratios := make(map[string]float64)
 
-		for k := range h.Plan.Orders {
-			ratios[k] = float64(i+1)*proportion[k] - float64(h.existed(k))
+		for k, v := range h.Plan.Categories {
+			existed := 0
+
+			for _, o := range v {
+				existed += h.existed(o)
+			}
+
+			ratios[k] = float64(i+1)*proportion[k] - float64(existed)
+		}
+
+		if h.Config.Heijunka.Verbose {
+			log.Printf("ratios : %v", ratios)
 		}
 
 		values := make([]float64, 0, len(h.Plan.Orders))
 
-		for k := range h.Plan.Orders {
+		for k := range h.Plan.Categories {
 			r := arrayIndexOf(values, ratios[k])
 
 			if r == -1 {
@@ -122,11 +101,13 @@ func (h *Heijunka) Process() {
 
 		sort.Sort(sort.Reverse(sort.Float64Slice(values)))
 
-		// log.Printf("values : %v", values)
+		if h.Config.Heijunka.Verbose {
+			log.Printf("values : %v", values)
+		}
 
 		rank := make(map[int][]string)
 
-		for k := range h.Plan.Orders {
+		for k := range h.Plan.Categories {
 			r := arrayIndexOf(values, ratios[k])
 
 			arry, ok := rank[r]
@@ -140,70 +121,91 @@ func (h *Heijunka) Process() {
 			rank[r] = arry
 		}
 
-		log.Printf("i : %v, ratios : %v", i, ratios)
-
-		log.Printf("rank : %v", rank)
-
-		log.Printf("items : %v", h.Items)
+		if h.Config.Heijunka.Verbose {
+			log.Printf("rank : %v", rank)
+		}
 
 		keys := mapKeysi(rank)
 
+		if h.Config.Heijunka.Verbose {
+			log.Printf("keys : %v", keys)
+		}
+
 		for _, r := range keys {
-			selected := rank[r]
+			cates := rank[r]
+
+			if h.Config.Heijunka.Verbose {
+				log.Printf("cates : %v", cates)
+			}
+
+			selected := make([]string, 0)
+
+			for _, o := range cates {
+				for _, e := range h.Plan.Categories[o] {
+					selected = append(selected, e)
+				}
+			}
+
+
+			if h.Config.Heijunka.Verbose {
+				log.Printf("selected : %v", selected)
+			}
 
 			var s string
 
-			if len(selected) > 1 {
-				min := len(h.Items)
+			min := len(h.Items)
 
-				m := make(map[string]int)
+			m := make(map[string]int)
+
+			for _, o := range selected {
+				n := h.existed(o)
+
+				m[o] = n
+
+				if n < min {
+					min = n
+				}
+			}
+
+			selected = make([]string, 0, len(m))
+
+			for k,v := range m {
+				if min == v {
+					selected = append(selected, k)
+				}
+			}
+			
+			if len(selected) > 1 {
+				var last string
+
+				if len(h.Items) > 0 {
+					last = h.Items[len(h.Items) - 1]
+				} else {
+					last = ""
+				}
 
 				for _, o := range selected {
-					n := h.existed(o)
-
-					m[o] = n
-
-					if n < min {
-						min = n
+					if o != last {
+						s = o
+						break
 					}
 				}
-
-				selected = make([]string, 0, len(m))
-
-				for k,v := range m {
-					if min == v {
-						selected = append(selected, k)
-					}
-				}
-				
-				if len(selected) > 1 {
-					var last string
-
-					if len(h.Items) > 0 {
-						last = h.Items[len(h.Items) - 1]
-					} else {
-						last = ""
-					}
-
-					for _, o := range selected {
-						if o != last {
-							s = o
-							break
-						}
-					}
-				} else if len(selected) == 1 {
-					s = selected[0]
-				}
-			} else {
+			} else if len(selected) == 1 {
 				s = selected[0]
 			}
 
-			log.Printf("selected : %v", s)
+			if h.Config.Heijunka.Verbose {
+				log.Printf("final selected : %v", s)
+			}
 
 			h.Items = append(h.Items, s)
 
 			break
 		}
+
+		if h.Config.Heijunka.Verbose {
+			log.Printf("items : %v", h.Items)
+		} 
 	}
 }
 

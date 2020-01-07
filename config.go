@@ -8,8 +8,9 @@ type Config struct {
 
 // HeijunkaConfig section is the configurations for overall.
 type HeijunkaConfig struct {
-	ID   string `toml:"id"`
-	Name string    `toml:"name"`
+	ID      string `toml:"id"`
+	Name    string `toml:"name"`
+	Verbose bool   `toml:"verbose"`
 }
 
 // SolverConfig section is the configurations for the specific solver.
